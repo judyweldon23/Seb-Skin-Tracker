@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Baby Tracker">
+<meta name="theme-color" content="#7a9e87">
+<link rel="manifest" href="manifest.json">
+<title>Baby Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
+:root {
+  --cream: #faf7f2;
+  --warm: #f0e8d8;
+  --warm2: #e8dcc8;
+  --sage: #7a9e87;
+  --sage-light: #a8c4b0;
+  --sage-dark: #4d7a5d;
+  --blush: #e8a598;
+  --blush-dark: #c97b6e;
+  --sky: #9ab8cc;
+  --sky-dark: #5a87a8;
+  --slate: #2c3e35;
+  --muted: #8a9e92;
+  --white: #ffffff;
+  --shadow: 0 2px 20px rgba(44,62,53,0.08);
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--slate); min-height: 100vh; max-width: 480px; margin: 0 auto; overscroll-behavior: none; }
+body { padding-bottom: 84px; }
+
+.app-header { background: var(--white); padding: 16px 20px 0; border-bottom: 1px solid var(--warm); position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+.header-row { display: flex; align-items: center; justify-content: space-between; }
+.app-title { font-family: 'Playfair Display', serif; font-size: 21px; color: var(--slate); letter-spacing: -0.3px; }
+.app-title span { color: var(--sage); }
+.app-badge { background: var(--sage); color: white; border-radius: 20px; font-size: 10px; padding: 3px 9px; font-weight: 500; }
+
+.tab-bar { display: flex; margin-top: 14px; border-top: 1px solid var(--warm); }
+.tab { flex: 1; padding: 10px 2px; text-align: center; font-size: 10.5px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; user-select: none; }
+.tab.active { color: var(--sage-dark); border-bottom-color: var(--sage); }
+.tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+
+.card { background: var(--white); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.card-title { font-family: 'Playfair Display', serif; font-size: 15px; margin-bottom: 12px; color: var(--slate); }
+
+.upload-zone { border: 2px dashed var(--sage-light); border-radius: 12px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--cream); }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--sage); background: rgba(122,158,135,0.05); }
+.upload-zone input { display: none; }
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-label { font-size: 13px; color: var(--muted); }
+.upload-label strong { color: var(--sage-dark); }
+.format-hint { background: rgba(122,158,135,0.1); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+.format-hint strong { color: var(--sage-dark); display: block; margin-bottom: 3px; }
+
+.chart-wrap { position: relative; height: 200px; margin-top: 4px; }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card { background: var(--white); border-radius: 12px; padding: 13px 10px; text-align: center; box-shadow: var(--shadow); }
+.stat-value { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--sage-dark); line-height: 1; }
+.stat-label { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+.filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-btn { padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--sage-light); background: transparent; color: var(--muted); font-size: 12.5px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.filter-btn.active { background: var(--sage); border-color: var(--sage); color: white; }
+
+.form-group { margin-bottom: 14px; }
+label { display: block; font-size: 13px; font-weight: 500; color: var(--slate); margin-bottom: 5px; }
+input[type="text"], input[type="date"], textarea, select {
+  width: 100%; padding: 10px 13px; border: 1.5px solid var(--warm); border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--slate); background: var(--white);
+  transition: border-color 0.15s; outline: none; -webkit-appearance: none; appearance: none;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--sage); }
+textarea { resize: vertical; min-height: 68px; }
+
+.skin-rating { display: flex; gap: 6px; }
+.rating-btn { flex: 1; padding: 9px 2px; border-radius: 10px; border: 2px solid var(--warm); background: transparent; font-size: 18px; cursor: pointer; transition: all 0.15s; text-align: center; font-family: 'DM Sans', sans-serif; }
+.rating-btn .r-label { font-size: 9px; color: var(--muted); display: block; margin-top: 2px; }
+.rating-btn.selected { border-color: var(--sage); background: rgba(122,158,135,0.12); }
+
+/* Body map */
+.body-map-container { display: flex; gap: 14px; align-items: flex-start; }
+.body-map-svg { flex-shrink: 0; width: 120px; }
+.flare-zones { flex: 1; min-width: 0; }
+.zone-group { margin-bottom: 10px; }
+.zone-group-label { font-size: 10.5px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px; }
+.zone-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+.zone-btn { padding: 5px 9px; border-radius: 8px; border: 1.5px solid var(--warm); background: transparent; font-size: 11.5px; color: var(--slate); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.zone-btn.selected { background: var(--blush); border-color: var(--blush-dark); color: white; }
+.body-zone { cursor: pointer; transition: fill 0.2s; }
+.body-zone.active { fill: rgba(232,165,152,0.6) !important; }
+
+.toggle-group { display: flex; flex-wrap: wrap; gap: 7px; }
+.toggle-pill { padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--warm); background: transparent; font-size: 12.5px; color: var(--slate); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.toggle-pill.selected { background: var(--blush); border-color: var(--blush-dark); color: white; }
+
+.bool-toggle { display: flex; gap: 8px; }
+.bool-btn { flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--warm); background: transparent; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: center; transition: all 0.15s; }
+.bool-btn.yes.selected { background: var(--sage-light); border-color: var(--sage); }
+.bool-btn.no.selected { background: var(--warm); border-color: var(--warm2); }
+
+.tag-input-wrap { display: flex; flex-wrap: wrap; gap: 5px; padding: 7px; border: 1.5px solid var(--warm); border-radius: 10px; background: var(--white); min-height: 42px; align-items: center; cursor: text; }
+.tag-input-wrap:focus-within { border-color: var(--sage); }
+.tag-chip { background: var(--warm); border-radius: 20px; padding: 3px 8px 3px 10px; font-size: 12.5px; color: var(--slate); display: flex; align-items: center; gap: 4px; }
+.tag-chip .remove { cursor: pointer; color: var(--muted); font-size: 15px; line-height: 1; }
+.tag-input-inner { border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--slate); min-width: 90px; flex: 1; padding: 2px; background: transparent; }
+
+.btn-primary { width: 100%; padding: 14px; background: var(--sage); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.2s; }
+.btn-primary:active { background: var(--sage-dark); }
+.btn-sm { padding: 6px 13px; border-radius: 8px; border: 1.5px solid var(--sage-light); background: transparent; color: var(--sage-dark); font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+.history-entry { background: var(--white); border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: var(--shadow); position: relative; }
+.history-date { font-size: 11.5px; color: var(--muted); margin-bottom: 5px; }
+.history-skin { font-size: 20px; display: inline; margin-right: 6px; }
+.history-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.history-tag { background: var(--warm); border-radius: 20px; padding: 3px 9px; font-size: 11px; color: var(--muted); }
+.history-tag.trigger { background: rgba(232,165,152,0.25); color: var(--blush-dark); }
+.history-tag.med { background: rgba(122,158,135,0.15); color: var(--sage-dark); }
+.history-tag.zone { background: rgba(154,184,204,0.25); color: var(--sky-dark); }
+.history-notes { font-size: 12.5px; color: var(--muted); margin-top: 5px; font-style: italic; }
+.delete-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; padding: 4px; }
+.severity-bar { height: 5px; background: var(--warm); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+.severity-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+.eczema-chart-wrap { position: relative; height: 170px; margin-top: 6px; }
+
+.corr-food-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--warm); }
+.corr-food-row:last-child { border-bottom: none; }
+.corr-food-name { flex: 1; font-size: 13.5px; font-weight: 500; }
+.corr-meta { font-size: 11px; color: var(--muted); }
+.corr-badge { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.corr-badge.warn { background: rgba(232,165,152,0.25); color: var(--blush-dark); }
+.corr-badge.ok { background: rgba(122,158,135,0.15); color: var(--sage-dark); }
+.corr-badge.none { background: var(--warm); color: var(--muted); }
+
+.toast { position: fixed; bottom: 94px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--slate); color: white; padding: 11px 22px; border-radius: 30px; font-size: 13.5px; opacity: 0; transition: all 0.25s; z-index: 999; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.section-label { font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+.empty-state { text-align: center; padding: 36px 20px; color: var(--muted); }
+.empty-state .e-icon { font-size: 44px; margin-bottom: 10px; }
+.empty-state p { font-size: 13.5px; line-height: 1.6; }
+
+.install-banner { background: linear-gradient(135deg, var(--sage-dark), var(--sage)); color: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
+.install-banner .ib-icon { font-size: 26px; flex-shrink: 0; }
+.install-banner .ib-text { flex: 1; font-size: 12.5px; line-height: 1.4; }
+.install-banner .ib-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+.install-banner .ib-close { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 26px; height: 26px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.add-trigger-row { display: flex; gap: 6px; margin-top: 8px; }
+.add-trigger-row input { flex: 1; }
+
+.collapsible-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 2px 0; }
+.collapsible-chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s; }
+.collapsible-chevron.open { transform: rotate(180deg); }
+.collapsible-body { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
+.collapsible-body.open { max-height: 600px; }
+.divider { height: 1px; background: var(--warm); margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-row">
+    <div class="app-title">Baby <span>Tracker</span></div>
+    <div class="app-badge">PWA</div>
+  </div>
+  <div class="tab-bar">
+    <div class="tab active" data-tab="sleep" onclick="switchTab('sleep')"><span class="tab-icon">🌙</span>Sleep</div>
+    <div class="tab" data-tab="eczema-log" onclick="switchTab('eczema-log')"><span class="tab-icon">📋</span>Log</div>
+    <div class="tab" data-tab="eczema-history" onclick="switchTab('eczema-history')"><span class="tab-icon">📈</span>History</div>
+    <div class="tab" data-tab="food-tracker" onclick="switchTab('food-tracker')"><span class="tab-icon">🍽</span>Foods</div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLEEP ═══════════════ -->
+<div class="section active" id="section-sleep">
+  <div id="installBanner" class="install-banner" style="margin-top:14px;display:none">
+    <div class="ib-icon">📲</div>
+    <div class="ib-text">
+      <strong>Install as App</strong>
+      iPhone: tap Share → Add to Home Screen<br>Android: browser menu → Install App
+    </div>
+    <button class="ib-close" onclick="document.getElementById('installBanner').style.display='none';localStorage.setItem('bannerDismissed','1')">×</button>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">Import Huckleberry Data</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('dragover')"
+         ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" accept=".csv,.json" onchange="handleFile(event)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-label">Drop file here or <strong>browse</strong></div>
+    </div>
+    <div class="format-hint">
+      <strong>Export from Huckleberry:</strong>
+      Settings → Export Data → CSV or JSON. Auto-detects columns like <em>Start Time, End Time, Type</em>.
+    </div>
+  </div>
+
+  <div id="sleepStats" style="display:none">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter(this,'7d')">7d</button>
+      <button class="filter-btn" onclick="setFilter(this,'30d')">30d</button>
+      <button class="filter-btn" onclick="setFilter(this,'90d')">90d</button>
+      <button class="filter-btn" onclick="setFilter(this,'all')">All</button>
+    </div>
+    <div class="card"><div class="card-title">Total Sleep Per Day</div><div class="chart-wrap"><canvas id="totalSleepChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Nap vs. Night Sleep</div><div class="chart-wrap"><canvas id="splitChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Session Times</div><div class="chart-wrap" style="height:240px"><canvas id="scatterChart"></canvas></div></div>
+  </div>
+
+  <div id="noSleepData">
+    <div class="empty-state"><div class="e-icon">🌙</div><p>Upload your Huckleberry export to see sleep trends.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════ LOG ═══════════════ -->
+<div class="section" id="section-eczema-log">
+  <div style="margin-top:14px">
+
+    <div class="card">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Date</label>
+        <input type="date" id="logDate">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Skin Condition Today</div>
+      <div class="skin-rating" id="skinRating">
+        <button class="rating-btn" data-val="1" onclick="selectRating(this)">😊<span class="r-label">Clear</span></button>
+        <button class="rating-btn" data-val="2" onclick="selectRating(this)">🙂<span class="r-label">Mild</span></button>
+        <button class="rating-btn" data-val="3" onclick="selectRating(this)">😐<span class="r-label">Mod.</span></button>
+        <button class="rating-btn" data-val="4" onclick="selectRating(this)">😟<span class="r-label">Severe</span></button>
+        <button class="rating-btn" data-val="5" onclick="selectRating(this)">😣<span class="r-label">Worst</span></button>
+      </div>
+    </div>
+
+    <!-- Flare locations — shown when not clear -->
+    <div class="card" id="flareCard" style="display:none">
+      <div class="card-title">Flare Locations</div>
+      <div class="body-map-container">
+        <svg class="body-map-svg" viewBox="0 0 90 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Body outlines -->
+          <ellipse cx="45" cy="22" rx="18" ry="19" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="39" y="39" width="12" height="15" rx="5" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="25" y="54" width="40" height="58" rx="9" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="9" y="56" width="14" height="48" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="67" y="56" width="14" height="48" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="28" y="114" width="14" height="64" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="48" y="114" width="14" height="64" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <ellipse cx="33" cy="181" rx="9" ry="5" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <ellipse cx="57" cy="181" rx="9" ry="5" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <!-- Interactive zones -->
+          <ellipse id="svgz-left-cheek" class="body-zone" cx="36" cy="24" rx="7" ry="6" fill="transparent" onclick="toggleZone('Left cheek')"/>
+          <ellipse id="svgz-right-cheek" class="body-zone" cx="54" cy="24" rx="7" ry="6" fill="transparent" onclick="toggleZone('Right cheek')"/>
+          <rect id="svgz-forehead" class="body-zone" x="34" y="8" width="22" height="10" rx="4" fill="transparent" onclick="toggleZone('Forehead')"/>
+          <rect id="svgz-neck" class="body-zone" x="39" y="39" width="12" height="15" rx="4" fill="transparent" onclick="toggleZone('Neck')"/>
+          <rect id="svgz-chest" class="body-zone" x="30" y="58" width="30" height="24" rx="4" fill="transparent" onclick="toggleZone('Chest')"/>
+          <rect id="svgz-back" class="body-zone" x="30" y="84" width="30" height="24" rx="4" fill="transparent" onclick="toggleZone('Back')"/>
+          <rect id="svgz-left-elbow" class="body-zone" x="9" y="80" width="14" height="14" rx="4" fill="transparent" onclick="toggleZone('Left elbow')"/>
+          <rect id="svgz-right-elbow" class="body-zone" x="67" y="80" width="14" height="14" rx="4" fill="transparent" onclick="toggleZone('Right elbow')"/>
+          <rect id="svgz-left-wrist" class="body-zone" x="9" y="96" width="14" height="10" rx="4" fill="transparent" onclick="toggleZone('Left wrist')"/>
+          <rect id="svgz-right-wrist" class="body-zone" x="67" y="96" width="14" height="10" rx="4" fill="transparent" onclick="toggleZone('Right wrist')"/>
+          <rect id="svgz-left-knee" class="body-zone" x="27" y="142" width="15" height="14" rx="4" fill="transparent" onclick="toggleZone('Left knee')"/>
+          <rect id="svgz-right-knee" class="body-zone" x="47" y="142" width="15" height="14" rx="4" fill="transparent" onclick="toggleZone('Right knee')"/>
+          <rect id="svgz-left-ankle" class="body-zone" x="27" y="163" width="15" height="14" rx="4" fill="transparent" onclick="toggleZone('Left ankle')"/>
+          <rect id="svgz-right-ankle" class="body-zone" x="47" y="163" width="15" height="14" rx="4" fill="transparent" onclick="toggleZone('Right ankle')"/>
+        </svg>
+
+        <div class="flare-zones">
+          <div class="zone-group">
+            <div class="zone-group-label">Face</div>
+            <div class="zone-btns">
+              <button class="zone-btn" data-zone="Left cheek" onclick="toggleZone('Left cheek')">L. Cheek</button>
+              <button class="zone-btn" data-zone="Right cheek" onclick="toggleZone('Right cheek')">R. Cheek</button>
+              <button class="zone-btn" data-zone="Forehead" onclick="toggleZone('Forehead')">Forehead</button>
+              <button class="zone-btn" data-zone="Chin" onclick="toggleZone('Chin')">Chin</button>
+              <button class="zone-btn" data-zone="Left side of face" onclick="toggleZone('Left side of face')">L. Face</button>
+              <button class="zone-btn" data-zone="Right side of face" onclick="toggleZone('Right side of face')">R. Face</button>
+            </div>
+          </div>
+          <div class="zone-group">
+            <div class="zone-group-label">Upper body</div>
+            <div class="zone-btns">
+              <button class="zone-btn" data-zone="Neck" onclick="toggleZone('Neck')">Neck</button>
+              <button class="zone-btn" data-zone="Chest" onclick="toggleZone('Chest')">Chest</button>
+              <button class="zone-btn" data-zone="Back" onclick="toggleZone('Back')">Back</button>
+              <button class="zone-btn" data-zone="Left elbow" onclick="toggleZone('Left elbow')">L. Elbow</button>
+              <button class="zone-btn" data-zone="Right elbow" onclick="toggleZone('Right elbow')">R. Elbow</button>
+              <button class="zone-btn" data-zone="Left wrist" onclick="toggleZone('Left wrist')">L. Wrist</button>
+              <button class="zone-btn" data-zone="Right wrist" onclick="toggleZone('Right wrist')">R. Wrist</button>
+            </div>
+          </div>
+          <div class="zone-group">
+            <div class="zone-group-label">Lower body</div>
+            <div class="zone-btns">
+              <button class="zone-btn" data-zone="Left knee" onclick="toggleZone('Left knee')">L. Knee</button>
+              <button class="zone-btn" data-zone="Right knee" onclick="toggleZone('Right knee')">R. Knee</button>
+              <button class="zone-btn" data-zone="Left ankle" onclick="toggleZone('Left ankle')">L. Ankle</button>
+              <button class="zone-btn" data-zone="Right ankle" onclick="toggleZone('Right ankle')">R. Ankle</button>
+              <button class="zone-btn" data-zone="Left foot" onclick="toggleZone('Left foot')">L. Foot</button>
+              <button class="zone-btn" data-zone="Right foot" onclick="toggleZone('Right foot')">R. Foot</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Foods Eaten Today</div>
+      <label>Type and press Enter — tracked for flare correlation</label>
+      <div class="tag-input-wrap" id="foodTagWrap" onclick="document.getElementById('foodTagInput').focus()">
+        <input class="tag-input-inner" id="foodTagInput" placeholder="e.g. oats, banana, chicken..." onkeydown="handleTagInput(event,'food')">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Known / Suspected Triggers</div>
+
+      <div class="collapsible-header" onclick="toggleColl(this)">
+        <span style="font-size:12px;font-weight:500;color:var(--muted)">FOOD TRIGGERS</span>
+        <span class="collapsible-chevron open">▼</span>
+      </div>
+      <div class="collapsible-body open">
+        <div style="height:8px"></div>
+        <div class="toggle-group" id="foodTriggerGroup">
+          <button class="toggle-pill" onclick="togglePill(this)">Dairy / Milk</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Egg (whole)</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Baked egg</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Wheat / Gluten</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Soy</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Tree nuts</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Peanuts</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Salmon</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Shrimp</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Fish</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Peppers</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Peas</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Tomato</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Citrus</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Strawberry</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="collapsible-header" onclick="toggleColl(this)">
+        <span style="font-size:12px;font-weight:500;color:var(--muted)">ENVIRONMENTAL TRIGGERS</span>
+        <span class="collapsible-chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div style="height:8px"></div>
+        <div class="toggle-group" id="envTriggerGroup">
+          <button class="toggle-pill" onclick="togglePill(this)">Dust mites</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Pet dander</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Pollen</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Heat / sweating</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Cold / dry air</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Laundry detergent</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Fabric softener</button>
+          <button class="toggle-pill" onclick="togglePill(this)">New clothing</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Wool / synthetic</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Pool / chlorine</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Stress / tired</button>
+          <button class="toggle-pill" onclick="togglePill(this)">Teething</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <label>Add custom trigger</label>
+      <div class="add-trigger-row">
+        <input type="text" id="customTriggerInput" placeholder="Custom trigger name..." onkeydown="if(event.key==='Enter')addCustomTrigger()">
+        <button class="btn-sm" onclick="addCustomTrigger()">+ Add</button>
+      </div>
+      <div class="toggle-group" id="customTriggerGroup" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Bath & Skincare</div>
+      <div class="form-group">
+        <label>Bath today?</label>
+        <div class="bool-toggle">
+          <button class="bool-btn yes" onclick="selectBool(this,'bath','yes')">🛁 Yes</button>
+          <button class="bool-btn no" onclick="selectBool(this,'bath','no')">✗ No</button>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Lotions / Creams (Enter to add)</label>
+        <div class="tag-input-wrap" id="lotionTagWrap" onclick="document.getElementById('lotionTagInput').focus()">
+          <input class="tag-input-inner" id="lotionTagInput" placeholder="e.g. CeraVe, Aveeno Baby..." onkeydown="handleTagInput(event,'lotion')">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Medications Applied</div>
+      <div class="form-group">
+        <label>Medication (Enter to add)</label>
+        <div class="tag-input-wrap" id="medTagWrap" onclick="document.getElementById('medTagInput').focus()">
+          <input class="tag-input-inner" id="medTagInput" placeholder="e.g. Hydrocortisone 1%..." onkeydown="handleTagInput(event,'med')">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Times applied</label>
+        <select id="medTimes">
+          <option value="">—</option>
+          <option>1×</option><option>2×</option><option>3×</option><option>4×+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Notes / Observations</label>
+        <textarea id="logNotes" placeholder="Flare description, location details, baby's comfort, anything unusual..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="saveLog()">Save Today's Log</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ HISTORY ═══════════════ -->
+<div class="section" id="section-eczema-history">
+  <div style="margin-top:14px">
+    <div id="eczemaChartCard" class="card" style="display:none">
+      <div class="card-title">Skin Condition Trend</div>
+      <div class="eczema-chart-wrap"><canvas id="eczemaChart"></canvas></div>
+    </div>
+    <div class="section-label">Past Entries</div>
+    <div id="historyList"></div>
+    <div id="noHistory" class="empty-state"><div class="e-icon">📋</div><p>No logs yet. Start tracking in the Log tab.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOD TRACKER ═══════════════ -->
+<div class="section" id="section-food-tracker">
+  <div style="margin-top:14px">
+    <div class="card">
+      <div class="card-title">Food × Flare Correlation</div>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px">
+        Tracks when each food was last eaten and whether a flare (skin rating ≥ 3) occurred within the selected window afterward.
+      </p>
+      <label style="margin-bottom:6px">Flare window after eating</label>
+      <div class="filter-row" style="margin-bottom:0">
+        <button class="filter-btn active" onclick="setCorrWindow(this,1)">Next day</button>
+        <button class="filter-btn" onclick="setCorrWindow(this,2)">Within 2d</button>
+        <button class="filter-btn" onclick="setCorrWindow(this,3)">Within 3d</button>
+      </div>
+    </div>
+    <div id="foodCorrList"></div>
+    <div id="noFoodData" class="empty-state"><div class="e-icon">🍽</div><p>Log at least a few days of foods and skin ratings to see correlations appear here.</p></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════ STATE ════════════
+let sleepData = [], activeFilter = '7d', skinRatingVal = null;
+let boolState = {}, tagState = { food:[], lotion:[], med:[] };
+let selectedZones = [], corrWindow = 1, charts = {};
+let customTriggers = JSON.parse(localStorage.getItem('customTriggers') || '[]');
+let eczemaLogs = JSON.parse(localStorage.getItem('eczemaLogs') || '[]');
+
+// ════════════ INIT ════════════
+document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+renderCustomTriggers();
+
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+if (!isStandalone && !localStorage.getItem('bannerDismissed')) {
+  document.getElementById('installBanner').style.display = 'flex';
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// ════════════ TABS ════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`section-${tab}`).classList.add('active');
+  if (tab === 'eczema-history') renderHistory();
+  if (tab === 'food-tracker') renderFoodCorrelation();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ════════════ SLEEP ════════════
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+}
+function handleFile(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+
+function processFile(file) {
+  if (file.name.endsWith('.json')) {
+    const r = new FileReader();
+    r.onload = e => { try { sleepData = parseJSON(JSON.parse(e.target.result)); renderSleepCharts(); } catch { showToast('Could not parse JSON'); } };
+    r.readAsText(file);
+  } else {
+    Papa.parse(file, { header:true, skipEmptyLines:true, complete: r => {
+      sleepData = parseCSV(r.data);
+      if (!sleepData.length) showToast('No sleep data found — check column names');
+      else renderSleepCharts();
+    }});
+  }
+}
+
+function parseCSV(rows) {
+  if (!rows.length) return [];
+  const keys = Object.keys(rows[0]).map(k => k.trim());
+  const startCol = keys.find(k => /start/i.test(k)) || keys[0];
+  const endCol = keys.find(k => /end|finish|stop/i.test(k)) || keys[1];
+  const typeCol = keys.find(k => /type|category|kind|label/i.test(k));
+  return rows.flatMap(row => {
+    const start = pd(row[startCol]), end = pd(row[endCol]);
+    if (!start || !end || end <= start) return [];
+    const dur = (end-start)/3600000;
+    if (dur > 20) return [];
+    return [{ start, end, duration:dur, type:(typeCol ? row[typeCol]||'' : 'sleep').toLowerCase() }];
+  });
+}
+
+function parseJSON(json) {
+  const items = Array.isArray(json) ? json : (json.data||json.entries||json.sessions||json.records||[]);
+  if (!Array.isArray(items)) return [];
+  return items.flatMap(item => {
+    const start = pd(item.start_time||item.startTime||item.start||item.from);
+    const end = pd(item.end_time||item.endTime||item.end||item.to);
+    if (!start || !end || end <= start) return [];
+    const dur = (end-start)/3600000;
+    if (dur > 20) return [];
+    return [{ start, end, duration:dur, type:(item.type||item.category||item.kind||'sleep').toLowerCase() }];
+  });
+}
+
+function pd(v) { if(!v) return null; const d = new Date(v); return isNaN(d)?null:d; }
+
+function setFilter(btn, f) {
+  document.querySelectorAll('#section-sleep .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); activeFilter = f; renderSleepCharts();
+}
+
+function filterSleep() {
+  if (activeFilter === 'all') return sleepData;
+  const days = {'7d':7,'30d':30,'90d':90}[activeFilter];
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days);
+  return sleepData.filter(s => s.start >= cutoff);
+}
+
+function groupByDay(sessions) {
+  const days = {};
+  for (const s of sessions) {
+    const key = s.start.toISOString().split('T')[0];
+    if (!days[key]) days[key] = {total:0,nap:0,night:0};
+    const isNap = s.type.includes('nap');
+    days[key].total += s.duration;
+    if (isNap) days[key].nap += s.duration; else days[key].night += s.duration;
+  }
+  return Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0]));
+}
+
+function renderSleepCharts() {
+  document.getElementById('noSleepData').style.display = 'none';
+  document.getElementById('sleepStats').style.display = 'block';
+  const filtered = filterSleep();
+  const days = groupByDay(filtered);
+  const labels = days.map(([d]) => new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  const totals = days.map(([,v]) => +v.total.toFixed(2));
+  const naps = days.map(([,v]) => +v.nap.toFixed(2));
+  const nights = days.map(([,v]) => +v.night.toFixed(2));
+  const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : '—';
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${avg(totals)}h</div><div class="stat-label">Avg Total</div></div>
+    <div class="stat-card"><div class="stat-value">${avg(naps)}h</div><div class="stat-label">Avg Nap</div></div>
+    <div class="stat-card"><div class="stat-value">${avg(nights)}h</div><div class="stat-label">Avg Night</div></div>`;
+  const base = { responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false}},
+    scales:{x:{ticks:{font:{size:9},maxRotation:45,maxTicksLimit:10},grid:{display:false}},
+            y:{ticks:{font:{size:9}},grid:{color:'#f0e8d8'}}} };
+  dc('totalSleepChart'); charts['totalSleepChart'] = new Chart(document.getElementById('totalSleepChart'),{
+    type:'bar', data:{labels,datasets:[{data:totals,backgroundColor:'rgba(122,158,135,0.7)',borderColor:'#4d7a5d',borderWidth:1,borderRadius:4}]}, options:base });
+  dc('splitChart'); charts['splitChart'] = new Chart(document.getElementById('splitChart'),{
+    type:'bar', data:{labels,datasets:[
+      {label:'Nap',data:naps,backgroundColor:'rgba(168,196,176,0.8)',borderRadius:4},
+      {label:'Night',data:nights,backgroundColor:'rgba(77,122,93,0.8)',borderRadius:4}
+    ]}, options:{...base,plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},
+      scales:{x:{...base.scales.x,stacked:true},y:{...base.scales.y,stacked:true}}} });
+  const bubbles = filtered.map(s=>({x:s.start.toISOString().split('T')[0],y:s.start.getHours()+s.start.getMinutes()/60,r:Math.max(4,s.duration*3),isNap:s.type.includes('nap')}));
+  dc('scatterChart'); charts['scatterChart'] = new Chart(document.getElementById('scatterChart'),{
+    type:'bubble', data:{datasets:[
+      {label:'Nap',data:bubbles.filter(d=>d.isNap),backgroundColor:'rgba(168,196,176,0.6)',borderColor:'rgba(122,158,135,0.8)'},
+      {label:'Night',data:bubbles.filter(d=>!d.isNap),backgroundColor:'rgba(77,122,93,0.5)',borderColor:'rgba(77,122,93,0.8)'}
+    ]}, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},
+      scales:{x:{type:'category',ticks:{font:{size:9},maxRotation:45,maxTicksLimit:8},grid:{display:false}},
+              y:{min:0,max:24,ticks:{font:{size:9},callback:v=>{const h=Math.floor(v),m=Math.round((v-h)*60),ap=h<12?'am':'pm';return`${h%12||12}${m?':'+String(m).padStart(2,'0'):''}${ap}`}},grid:{color:'#f0e8d8'}}}}
+  });
+  showToast(`Loaded ${sleepData.length} sessions ✓`);
+}
+
+function dc(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+// ════════════ ECZEMA FORM ════════════
+function selectRating(btn) {
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  skinRatingVal = parseInt(btn.dataset.val);
+  document.getElementById('flareCard').style.display = skinRatingVal >= 2 ? 'block' : 'none';
+}
+
+// SVG zone mapping
+const svgMap = {
+  'Left cheek':'svgz-left-cheek','Right cheek':'svgz-right-cheek',
+  'Forehead':'svgz-forehead','Neck':'svgz-neck','Chest':'svgz-chest','Back':'svgz-back',
+  'Left elbow':'svgz-left-elbow','Right elbow':'svgz-right-elbow',
+  'Left wrist':'svgz-left-wrist','Right wrist':'svgz-right-wrist',
+  'Left knee':'svgz-left-knee','Right knee':'svgz-right-knee',
+  'Left ankle':'svgz-left-ankle','Right ankle':'svgz-right-ankle'
+};
+
+function toggleZone(zone) {
+  const idx = selectedZones.indexOf(zone);
+  if (idx === -1) selectedZones.push(zone);
+  else selectedZones.splice(idx, 1);
+  const sel = selectedZones.includes(zone);
+  document.querySelectorAll(`.zone-btn[data-zone="${zone}"]`).forEach(b => b.classList.toggle('selected', sel));
+  const svgId = svgMap[zone];
+  if (svgId) {
+    const el = document.getElementById(svgId);
+    if (el) el.classList.toggle('active', sel);
+  }
+}
+
+function togglePill(btn) { btn.classList.toggle('selected'); }
+
+function toggleColl(header) {
+  const chevron = header.querySelector('.collapsible-chevron');
+  const body = header.nextElementSibling;
+  chevron.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function selectBool(btn, key, val) {
+  btn.parentElement.querySelectorAll('.bool-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  boolState[key] = val;
+}
+
+function handleTagInput(e, group) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.replace(/,/g,'').trim();
+    if (val) { tagState[group].push(val); renderTags(group); }
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && !e.target.value && tagState[group].length) {
+    tagState[group].pop(); renderTags(group);
+  }
+}
+
+function renderTags(group) {
+  const wrap = document.getElementById(`${group}TagWrap`);
+  const input = document.getElementById(`${group}TagInput`);
+  wrap.querySelectorAll('.tag-chip').forEach(c => c.remove());
+  tagState[group].forEach((tag, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${escHtml(tag)}<span class="remove" onclick="tagState['${group}'].splice(${i},1);renderTags('${group}')">×</span>`;
+    wrap.insertBefore(chip, input);
+  });
+}
+
+function addCustomTrigger() {
+  const input = document.getElementById('customTriggerInput');
+  const val = input.value.trim();
+  if (!val) return;
+  if (!customTriggers.includes(val)) { customTriggers.push(val); localStorage.setItem('customTriggers', JSON.stringify(customTriggers)); }
+  input.value = ''; renderCustomTriggers();
+}
+
+function renderCustomTriggers() {
+  document.getElementById('customTriggerGroup').innerHTML = customTriggers.map(t =>
+    `<button class="toggle-pill" onclick="togglePill(this)">${escHtml(t)}</button>`
+  ).join('');
+}
+
+function saveLog() {
+  const date = document.getElementById('logDate').value;
+  if (!date) { showToast('Please select a date'); return; }
+  if (!skinRatingVal) { showToast('Please rate skin condition'); return; }
+  const allTriggers = [
+    ...Array.from(document.querySelectorAll('#foodTriggerGroup .toggle-pill.selected, #envTriggerGroup .toggle-pill.selected, #customTriggerGroup .toggle-pill.selected')).map(b=>b.textContent)
+  ];
+  const log = {
+    id: Date.now(), date, skinRating: skinRatingVal,
+    flareZones: [...selectedZones], foods: [...tagState.food],
+    triggers: allTriggers, bath: boolState.bath || null,
+    lotions: [...tagState.lotion], medications: [...tagState.med],
+    medTimes: document.getElementById('medTimes').value,
+    notes: document.getElementById('logNotes').value.trim()
+  };
+  eczemaLogs = eczemaLogs.filter(l => l.date !== date);
+  eczemaLogs.unshift(log);
+  localStorage.setItem('eczemaLogs', JSON.stringify(eczemaLogs));
+  resetForm();
+  showToast('Log saved ✓');
+  switchTab('eczema-history');
+}
+
+function resetForm() {
+  document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  skinRatingVal = null; selectedZones = [];
+  document.querySelectorAll('.zone-btn, .body-zone').forEach(b => { b.classList.remove('selected'); b.classList.remove('active'); });
+  document.getElementById('flareCard').style.display = 'none';
+  tagState = {food:[],lotion:[],med:[]};
+  ['food','lotion','med'].forEach(g => renderTags(g));
+  document.querySelectorAll('.toggle-pill').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.bool-btn').forEach(b => b.classList.remove('selected'));
+  boolState = {}; document.getElementById('medTimes').value = ''; document.getElementById('logNotes').value = '';
+}
+
+// ════════════ HISTORY ════════════
+const rE = ['','😊','🙂','😐','😟','😣'];
+const rL = ['','Clear','Mild','Moderate','Severe','Worst'];
+const rC = ['','#7a9e87','#a8c4b0','#e8c87a','#e8a598','#c97b6e'];
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('noHistory');
+  const cc = document.getElementById('eczemaChartCard');
+  if (!eczemaLogs.length) { list.innerHTML=''; empty.style.display='block'; cc.style.display='none'; return; }
+  empty.style.display='none'; cc.style.display='block';
+  const sorted = [...eczemaLogs].sort((a,b)=>a.date.localeCompare(b.date));
+  dc('eczemaChart');
+  charts['eczemaChart'] = new Chart(document.getElementById('eczemaChart'),{
+    type:'line', data:{
+      labels: sorted.map(l=>new Date(l.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})),
+      datasets:[{data:sorted.map(l=>l.skinRating),borderColor:'#7a9e87',backgroundColor:'rgba(122,158,135,0.1)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:sorted.map(l=>rC[l.skinRating]),pointRadius:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{font:{size:9},maxRotation:45,maxTicksLimit:8},grid:{display:false}},
+              y:{min:1,max:5,ticks:{font:{size:9},stepSize:1,callback:v=>rL[v]||''},grid:{color:'#f0e8d8'}}}}
+  });
+  list.innerHTML = eczemaLogs.map(log => {
+    const tags = [];
+    log.flareZones?.forEach(z => tags.push(`<span class="history-tag zone">📍 ${escHtml(z)}</span>`));
+    log.triggers?.forEach(t => tags.push(`<span class="history-tag trigger">⚡ ${escHtml(t)}</span>`));
+    log.medications?.forEach(m => tags.push(`<span class="history-tag med">💊 ${escHtml(m)}</span>`));
+    log.lotions?.forEach(l => tags.push(`<span class="history-tag">${escHtml(l)}</span>`));
+    if (log.bath === 'yes') tags.push(`<span class="history-tag">🛁 Bath</span>`);
+    const pct = ((log.skinRating-1)/4*100).toFixed(0);
+    const ds = new Date(log.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric'});
+    return `<div class="history-entry">
+      <button class="delete-btn" onclick="deleteLog(${log.id})">×</button>
+      <div class="history-date">${ds}</div>
+      <span class="history-skin">${rE[log.skinRating]}</span><strong>${rL[log.skinRating]}</strong>
+      <div class="severity-bar"><div class="severity-fill" style="width:${pct}%;background:${rC[log.skinRating]}"></div></div>
+      <div class="history-tags">${tags.join('')}</div>
+      ${log.foods?.length ? `<div style="font-size:11.5px;color:var(--muted);margin-top:5px">🍽 ${log.foods.map(escHtml).join(', ')}</div>` : ''}
+      ${log.notes ? `<div class="history-notes">"${escHtml(log.notes)}"</div>` : ''}
+      ${log.medTimes ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Medication applied ${log.medTimes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function deleteLog(id) {
+  eczemaLogs = eczemaLogs.filter(l => l.id !== id);
+  localStorage.setItem('eczemaLogs', JSON.stringify(eczemaLogs));
+  renderHistory(); renderFoodCorrelation();
+}
+
+// ════════════ FOOD CORRELATION ════════════
+function setCorrWindow(btn, days) {
+  document.querySelectorAll('#section-food-tracker .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); corrWindow = days; renderFoodCorrelation();
+}
+
+function renderFoodCorrelation() {
+  const sorted = [...eczemaLogs].sort((a,b)=>a.date.localeCompare(b.date));
+  const noData = document.getElementById('noFoodData');
+  const list = document.getElementById('foodCorrList');
+
+  if (!sorted.length) { noData.style.display='block'; list.innerHTML=''; return; }
+
+  const foodMap = {};
+  for (let i=0; i<sorted.length; i++) {
+    const log = sorted[i];
+    for (const food of (log.foods||[])) {
+      const key = food.toLowerCase().trim();
+      if (!foodMap[key]) foodMap[key] = { name:food, lastEaten:log.date, count:0, flareCount:0 };
+      foodMap[key].name = food;
+      foodMap[key].lastEaten = log.date;
+      foodMap[key].count++;
+      // Check for flare within corrWindow days after
+      let flared = false;
+      for (let j=i+1; j<sorted.length; j++) {
+        const diff = (new Date(sorted[j].date) - new Date(log.date)) / 86400000;
+        if (diff < 0.5) continue;
+        if (diff > corrWindow + 0.5) break;
+        if (sorted[j].skinRating >= 3) { flared = true; break; }
+      }
+      if (flared) foodMap[key].flareCount++;
+    }
+  }
+
+  const allFoods = Object.values(foodMap);
+  if (!allFoods.length) { noData.style.display='block'; list.innerHTML=''; return; }
+  noData.style.display='none';
+
+  // Sort: most concerning first
+  allFoods.sort((a,b) => {
+    const ar = a.count>1 ? a.flareCount/a.count : -1;
+    const br = b.count>1 ? b.flareCount/b.count : -1;
+    return br - ar;
+  });
+
+  const daysAgo = date => {
+    const diff = Math.round((Date.now() - new Date(date+'T12:00:00')) / 86400000);
+    return diff===0?'today':diff===1?'yesterday':`${diff}d ago`;
+  };
+
+  const eligible = allFoods.filter(f=>f.count>=2);
+
+  list.innerHTML = `
+    <div class="card">
+      <div class="card-title">All Tracked Foods</div>
+      ${allFoods.map(f => {
+        const rate = f.count>1 ? f.flareCount/f.count : null;
+        const pct = rate !== null ? Math.round(rate*100) : null;
+        let badge, bc;
+        if (pct === null) { badge='1 log'; bc='none'; }
+        else if (pct >= 60) { badge=`⚠ ${pct}% flare rate`; bc='warn'; }
+        else if (pct >= 30) { badge=`${pct}% flare rate`; bc='warn'; }
+        else { badge=`${pct}% flare rate`; bc='ok'; }
+        return `<div class="corr-food-row">
+          <div>
+            <div class="corr-food-name">${escHtml(f.name)}</div>
+            <div class="corr-meta">Last eaten: ${daysAgo(f.lastEaten)} · logged ${f.count}×</div>
+          </div>
+          <span class="corr-badge ${bc}">${badge}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    ${eligible.length >= 2 ? buildCorrChart(eligible) : ''}
+  `;
+}
+
+function buildCorrChart(foods) {
+  const top = foods.slice(0,14);
+  setTimeout(() => {
+    dc('foodCorrChart');
+    const ctx = document.getElementById('foodCorrChart');
+    if (!ctx) return;
+    charts['foodCorrChart'] = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: top.map(f=>f.name.length>11?f.name.slice(0,11)+'…':f.name),
+        datasets:[{
+          label:'% followed by flare',
+          data: top.map(f=>Math.round(f.flareCount/f.count*100)),
+          backgroundColor: top.map(f=>{
+            const r=f.flareCount/f.count;
+            return r>=0.6?'rgba(201,123,110,0.85)':r>=0.3?'rgba(232,200,122,0.85)':'rgba(122,158,135,0.75)';
+          }),
+          borderRadius:4
+        }]
+      },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{min:0,max:100,ticks:{font:{size:9},callback:v=>v+'%'},grid:{color:'#f0e8d8'}},
+          y:{ticks:{font:{size:10}},grid:{display:false}}
+        }
+      }
+    });
+  }, 60);
+  const h = Math.max(140, top.length * 26);
+  return `<div class="card">
+    <div class="card-title">Flare Rate by Food</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:8px">🔴 High · 🟡 Moderate · 🟢 Low &nbsp;(foods logged 2+ times)</p>
+    <div style="position:relative;height:${h}px"><canvas id="foodCorrChart"></canvas></div>
+  </div>`;
+}
+</script>
+</body>
+</html>
