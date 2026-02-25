@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Baby Tracker">
+<meta name="theme-color" content="#7a9e87">
+<title>Baby Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+:root{--cream:#faf7f2;--warm:#f0e8d8;--warm2:#e8dcc8;--sage:#7a9e87;--sage-l:#a8c4b0;--sage-d:#4d7a5d;--blush:#e8a598;--blush-d:#c97b6e;--sky-d:#5a87a8;--slate:#2c3e35;--muted:#8a9e92;--white:#fff;--sh:0 2px 20px rgba(44,62,53,.08);--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--slate);min-height:100vh;max-width:480px;margin:0 auto}
+body{padding-bottom:84px}
+.hdr{background:var(--white);padding:16px 20px 0;border-bottom:1px solid var(--warm);position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.hdr-row{display:flex;align-items:center;justify-content:space-between}
+.title{font-family:'Playfair Display',serif;font-size:21px;letter-spacing:-.3px}.title span{color:var(--sage)}
+.tabs{display:flex;margin-top:14px;border-top:1px solid var(--warm)}
+.tab{flex:1;padding:10px 2px;text-align:center;font-size:10.5px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none}
+.tab.on{color:var(--sage-d);border-bottom-color:var(--sage)}
+.ti{font-size:16px;display:block;margin-bottom:2px}
+.sec{display:none;padding:16px}.sec.on{display:block}
+.card{background:var(--white);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--sh)}
+.ct{font-family:'Playfair Display',serif;font-size:15px;margin-bottom:12px;color:var(--slate)}
+.upload{border:2px dashed var(--sage-l);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)}
+.upload:hover,.upload.drag{border-color:var(--sage);background:rgba(122,158,135,.05)}
+.upload input{display:none}
+.hint{background:rgba(122,158,135,.1);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}
+.hint strong{color:var(--sage-d);display:block;margin-bottom:3px}
+.sr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.sc{background:var(--white);border-radius:12px;padding:13px 10px;text-align:center;box-shadow:var(--sh)}
+.sv{font-family:'Playfair Display',serif;font-size:20px;color:var(--sage-d);line-height:1}
+.sl{font-size:10px;color:var(--muted);margin-top:4px}
+.fr{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.fb{padding:5px 13px;border-radius:20px;border:1.5px solid var(--sage-l);background:transparent;color:var(--muted);font-size:12.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.fb.on{background:var(--sage);border-color:var(--sage);color:#fff}
+.fg{margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:500;color:var(--slate);margin-bottom:5px}
+input[type=text],input[type=date],textarea,select{width:100%;padding:10px 13px;border:1.5px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--slate);background:var(--white);transition:border-color .15s;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,textarea:focus,select:focus{border-color:var(--sage)}
+textarea{resize:vertical;min-height:68px}
+.skin{display:flex;gap:6px}
+.rb{flex:1;padding:9px 2px;border-radius:10px;border:2px solid var(--warm);background:transparent;font-size:18px;cursor:pointer;transition:all .15s;text-align:center;font-family:'DM Sans',sans-serif}
+.rb .rl{font-size:9px;color:var(--muted);display:block;margin-top:2px}
+.rb.on{border-color:var(--sage);background:rgba(122,158,135,.12)}
+.bmc{display:flex;gap:14px;align-items:flex-start}
+.bms{flex-shrink:0;width:120px}
+.fz{flex:1;min-width:0}
+.zg{margin-bottom:10px}
+.zgl{font-size:10.5px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.zbs{display:flex;flex-wrap:wrap;gap:5px}
+.zb{padding:5px 9px;border-radius:8px;border:1.5px solid var(--warm);background:transparent;font-size:11.5px;color:var(--slate);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.zb.on{background:var(--blush);border-color:var(--blush-d);color:#fff}
+.bzone{cursor:pointer;transition:fill .2s}
+.bzone.on{fill:rgba(232,165,152,.6)!important}
+.tg{display:flex;flex-wrap:wrap;gap:7px}
+.tp{padding:6px 12px;border-radius:20px;border:1.5px solid var(--warm);background:transparent;font-size:12.5px;color:var(--slate);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.tp.on{background:var(--blush);border-color:var(--blush-d);color:#fff}
+.bt{display:flex;gap:8px}
+.bb{flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--warm);background:transparent;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;transition:all .15s}
+.bb.yes.on{background:var(--sage-l);border-color:var(--sage)}
+.bb.no.on{background:var(--warm);border-color:var(--warm2)}
+.tiw{display:flex;flex-wrap:wrap;gap:5px;padding:7px;border:1.5px solid var(--warm);border-radius:10px;background:var(--white);min-height:42px;align-items:center;cursor:text}
+.tiw:focus-within{border-color:var(--sage)}
+.tc{background:var(--warm);border-radius:20px;padding:3px 8px 3px 10px;font-size:12.5px;color:var(--slate);display:flex;align-items:center;gap:4px}
+.tc .x{cursor:pointer;color:var(--muted);font-size:15px;line-height:1}
+.tin{border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--slate);min-width:90px;flex:1;padding:2px;background:transparent}
+.btn{width:100%;padding:14px;background:var(--sage);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .2s}
+.btn:active{background:var(--sage-d)}
+.bsm{padding:6px 13px;border-radius:8px;border:1.5px solid var(--sage-l);background:transparent;color:var(--sage-d);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.he{background:var(--white);border-radius:12px;padding:15px;margin-bottom:10px;box-shadow:var(--sh);position:relative}
+.hd{font-size:11.5px;color:var(--muted);margin-bottom:5px}
+.ht{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.ht span{background:var(--warm);border-radius:20px;padding:3px 9px;font-size:11px;color:var(--muted)}
+.ht .tr{background:rgba(232,165,152,.25);color:var(--blush-d)}
+.ht .md{background:rgba(122,158,135,.15);color:var(--sage-d)}
+.ht .zo{background:rgba(154,184,204,.25);color:var(--sky-d)}
+.hn{font-size:12.5px;color:var(--muted);margin-top:5px;font-style:italic}
+.dx{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:4px}
+.sbar{height:5px;background:var(--warm);border-radius:3px;overflow:hidden;margin-top:5px}
+.sbar-f{height:100%;border-radius:3px;transition:width .3s}
+.cfw{position:relative;height:170px;margin-top:6px}
+.cfw2{position:relative;height:200px;margin-top:4px}
+.cfr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--warm)}
+.cfr:last-child{border-bottom:none}
+.cfn{flex:1;font-size:13.5px;font-weight:500}
+.cfm{font-size:11px;color:var(--muted)}
+.cbg{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.cbg.w{background:rgba(232,165,152,.25);color:var(--blush-d)}
+.cbg.ok{background:rgba(122,158,135,.15);color:var(--sage-d)}
+.cbg.n{background:var(--warm);color:var(--muted)}
+.toast{position:fixed;bottom:94px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--slate);color:#fff;padding:11px 22px;border-radius:30px;font-size:13.5px;opacity:0;transition:all .25s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.sl2{font-size:10.5px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px}
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty .ei{font-size:44px;margin-bottom:10px}
+.empty p{font-size:13.5px;line-height:1.6}
+.ibanner{background:linear-gradient(135deg,var(--sage-d),var(--sage));color:#fff;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.ibanner .ii{font-size:26px;flex-shrink:0}
+.ibanner .it{flex:1;font-size:12.5px;line-height:1.5}
+.ibanner .it strong{display:block;font-size:14px;margin-bottom:2px}
+.ibanner .ic{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:26px;height:26px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.atr{display:flex;gap:6px;margin-top:8px}.atr input{flex:1}
+.ch{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:2px 0}
+.chv{font-size:11px;color:var(--muted);transition:transform .2s}
+.chv.on{transform:rotate(180deg)}
+.cb{overflow:hidden;max-height:0;transition:max-height .3s ease}
+.cb.on{max-height:600px}
+.div{height:1px;background:var(--warm);margin:12px 0}
+canvas{display:block}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="title">Baby <span>Tracker</span></div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" data-t="sleep" onclick="go('sleep')"><span class="ti">🌙</span>Sleep</div>
+    <div class="tab" data-t="log" onclick="go('log')"><span class="ti">📋</span>Log</div>
+    <div class="tab" data-t="hist" onclick="go('hist')"><span class="ti">📈</span>History</div>
+    <div class="tab" data-t="food" onclick="go('food')"><span class="ti">🍽</span>Foods</div>
+  </div>
+</div>
+
+<!-- ══════ SLEEP ══════ -->
+<div class="sec on" id="s-sleep">
+  <div id="ibanner" class="ibanner" style="margin-top:14px;display:none">
+    <div class="ii">📲</div>
+    <div class="it"><strong>Add to Home Screen</strong>iPhone: tap Share → Add to Home Screen<br>Android: browser menu → Install App</div>
+    <button class="ic" onclick="document.getElementById('ibanner').style.display='none';localStorage.setItem('ib','1')">×</button>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="ct">Import Huckleberry Data</div>
+    <div class="upload" id="uz" onclick="document.getElementById('fi').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')" ondrop="onDrop(event)">
+      <input type="file" id="fi" accept=".csv,.json" onchange="onFile(event)">
+      <div style="font-size:32px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;color:var(--muted)">Drop file here or <strong style="color:var(--sage-d)">browse</strong></div>
+    </div>
+    <div class="hint"><strong>Export from Huckleberry:</strong>Settings → Export Data → CSV or JSON. Auto-detects <em>Start Time, End Time, Type</em> columns.</div>
+  </div>
+  <div id="ss" style="display:none">
+    <div class="sr" id="sr"></div>
+    <div class="fr">
+      <button class="fb on" onclick="setF(this,'7d')">7d</button>
+      <button class="fb" onclick="setF(this,'30d')">30d</button>
+      <button class="fb" onclick="setF(this,'90d')">90d</button>
+      <button class="fb" onclick="setF(this,'all')">All</button>
+    </div>
+    <div class="card"><div class="ct">Total Sleep Per Day</div><div class="cfw2"><canvas id="c1"></canvas></div></div>
+    <div class="card"><div class="ct">Nap vs. Night Sleep</div><div class="cfw2"><canvas id="c2"></canvas></div></div>
+    <div class="card"><div class="ct">Session Timeline</div><div style="position:relative;height:260px;margin-top:4px"><canvas id="c3"></canvas></div></div>
+  </div>
+  <div id="sn"><div class="empty"><div class="ei">🌙</div><p>Upload your Huckleberry export to see sleep trends over time.</p></div></div>
+</div>
+
+<!-- ══════ LOG ══════ -->
+<div class="sec" id="s-log">
+  <div style="margin-top:14px">
+    <div class="card"><div class="fg" style="margin-bottom:0"><label>Date</label><input type="date" id="ld"></div></div>
+
+    <div class="card">
+      <div class="ct">Skin Condition Today</div>
+      <div class="skin">
+        <button class="rb" data-v="1" onclick="selR(this)">😊<span class="rl">Clear</span></button>
+        <button class="rb" data-v="2" onclick="selR(this)">🙂<span class="rl">Mild</span></button>
+        <button class="rb" data-v="3" onclick="selR(this)">😐<span class="rl">Mod.</span></button>
+        <button class="rb" data-v="4" onclick="selR(this)">😟<span class="rl">Severe</span></button>
+        <button class="rb" data-v="5" onclick="selR(this)">😣<span class="rl">Worst</span></button>
+      </div>
+    </div>
+
+    <div class="card" id="fc" style="display:none">
+      <div class="ct">Flare Locations</div>
+      <div class="bmc">
+        <svg class="bms" viewBox="0 0 90 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="45" cy="22" rx="18" ry="19" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="39" y="39" width="12" height="15" rx="5" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="25" y="54" width="40" height="58" rx="9" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="9" y="56" width="14" height="48" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="67" y="56" width="14" height="48" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="28" y="114" width="14" height="64" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <rect x="48" y="114" width="14" height="64" rx="6" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <ellipse cx="33" cy="181" rx="9" ry="5" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <ellipse cx="57" cy="181" rx="9" ry="5" fill="#f0e8d8" stroke="#c4b09a" stroke-width="1.2"/>
+          <ellipse id="z-lc" class="bzone" cx="36" cy="24" rx="7" ry="6" fill="transparent" onclick="tz('Left cheek')"/>
+          <ellipse id="z-rc" class="bzone" cx="54" cy="24" rx="7" ry="6" fill="transparent" onclick="tz('Right cheek')"/>
+          <rect id="z-fh" class="bzone" x="34" y="8" width="22" height="10" rx="4" fill="transparent" onclick="tz('Forehead')"/>
+          <rect id="z-nk" class="bzone" x="39" y="39" width="12" height="15" rx="4" fill="transparent" onclick="tz('Neck')"/>
+          <rect id="z-ch" class="bzone" x="30" y="58" width="30" height="24" rx="4" fill="transparent" onclick="tz('Chest')"/>
+          <rect id="z-bk" class="bzone" x="30" y="84" width="30" height="24" rx="4" fill="transparent" onclick="tz('Back')"/>
+          <rect id="z-le" class="bzone" x="9" y="80" width="14" height="14" rx="4" fill="transparent" onclick="tz('Left elbow')"/>
+          <rect id="z-re" class="bzone" x="67" y="80" width="14" height="14" rx="4" fill="transparent" onclick="tz('Right elbow')"/>
+          <rect id="z-lw" class="bzone" x="9" y="96" width="14" height="10" rx="4" fill="transparent" onclick="tz('Left wrist')"/>
+          <rect id="z-rw" class="bzone" x="67" y="96" width="14" height="10" rx="4" fill="transparent" onclick="tz('Right wrist')"/>
+          <rect id="z-lk" class="bzone" x="27" y="142" width="15" height="14" rx="4" fill="transparent" onclick="tz('Left knee')"/>
+          <rect id="z-rk" class="bzone" x="47" y="142" width="15" height="14" rx="4" fill="transparent" onclick="tz('Right knee')"/>
+          <rect id="z-la" class="bzone" x="27" y="163" width="15" height="14" rx="4" fill="transparent" onclick="tz('Left ankle')"/>
+          <rect id="z-ra" class="bzone" x="47" y="163" width="15" height="14" rx="4" fill="transparent" onclick="tz('Right ankle')"/>
+        </svg>
+        <div class="fz">
+          <div class="zg"><div class="zgl">Face</div><div class="zbs">
+            <button class="zb" data-z="Left cheek" onclick="tz('Left cheek')">L. Cheek</button>
+            <button class="zb" data-z="Right cheek" onclick="tz('Right cheek')">R. Cheek</button>
+            <button class="zb" data-z="Forehead" onclick="tz('Forehead')">Forehead</button>
+            <button class="zb" data-z="Chin" onclick="tz('Chin')">Chin</button>
+            <button class="zb" data-z="Left side of face" onclick="tz('Left side of face')">L. Face</button>
+            <button class="zb" data-z="Right side of face" onclick="tz('Right side of face')">R. Face</button>
+          </div></div>
+          <div class="zg"><div class="zgl">Upper body</div><div class="zbs">
+            <button class="zb" data-z="Neck" onclick="tz('Neck')">Neck</button>
+            <button class="zb" data-z="Chest" onclick="tz('Chest')">Chest</button>
+            <button class="zb" data-z="Back" onclick="tz('Back')">Back</button>
+            <button class="zb" data-z="Left elbow" onclick="tz('Left elbow')">L. Elbow</button>
+            <button class="zb" data-z="Right elbow" onclick="tz('Right elbow')">R. Elbow</button>
+            <button class="zb" data-z="Left wrist" onclick="tz('Left wrist')">L. Wrist</button>
+            <button class="zb" data-z="Right wrist" onclick="tz('Right wrist')">R. Wrist</button>
+          </div></div>
+          <div class="zg"><div class="zgl">Lower body</div><div class="zbs">
+            <button class="zb" data-z="Left knee" onclick="tz('Left knee')">L. Knee</button>
+            <button class="zb" data-z="Right knee" onclick="tz('Right knee')">R. Knee</button>
+            <button class="zb" data-z="Left ankle" onclick="tz('Left ankle')">L. Ankle</button>
+            <button class="zb" data-z="Right ankle" onclick="tz('Right ankle')">R. Ankle</button>
+            <button class="zb" data-z="Left foot" onclick="tz('Left foot')">L. Foot</button>
+            <button class="zb" data-z="Right foot" onclick="tz('Right foot')">R. Foot</button>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Foods Eaten Today</div>
+      <label>Press Enter after each food — tracked for flare correlation</label>
+      <div class="tiw" id="ftw" onclick="document.getElementById('fti').focus()">
+        <input class="tin" id="fti" placeholder="e.g. oats, banana, chicken..." onkeydown="onTag(event,'food')">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Known / Suspected Triggers</div>
+      <div class="ch" onclick="togColl(this)">
+        <span style="font-size:12px;font-weight:500;color:var(--muted)">FOOD TRIGGERS</span>
+        <span class="chv on">▼</span>
+      </div>
+      <div class="cb on"><div style="height:8px"></div>
+        <div class="tg" id="ftg">
+          <button class="tp" onclick="togP(this)">Dairy / Milk</button>
+          <button class="tp" onclick="togP(this)">Egg (whole)</button>
+          <button class="tp" onclick="togP(this)">Baked egg</button>
+          <button class="tp" onclick="togP(this)">Wheat / Gluten</button>
+          <button class="tp" onclick="togP(this)">Soy</button>
+          <button class="tp" onclick="togP(this)">Tree nuts</button>
+          <button class="tp" onclick="togP(this)">Peanuts</button>
+          <button class="tp" onclick="togP(this)">Salmon</button>
+          <button class="tp" onclick="togP(this)">Shrimp</button>
+          <button class="tp" onclick="togP(this)">Fish</button>
+          <button class="tp" onclick="togP(this)">Peppers</button>
+          <button class="tp" onclick="togP(this)">Peas</button>
+          <button class="tp" onclick="togP(this)">Tomato</button>
+          <button class="tp" onclick="togP(this)">Citrus</button>
+          <button class="tp" onclick="togP(this)">Strawberry</button>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div class="ch" onclick="togColl(this)">
+        <span style="font-size:12px;font-weight:500;color:var(--muted)">ENVIRONMENTAL TRIGGERS</span>
+        <span class="chv">▼</span>
+      </div>
+      <div class="cb"><div style="height:8px"></div>
+        <div class="tg" id="etg">
+          <button class="tp" onclick="togP(this)">Dust mites</button>
+          <button class="tp" onclick="togP(this)">Pet dander</button>
+          <button class="tp" onclick="togP(this)">Pollen</button>
+          <button class="tp" onclick="togP(this)">Heat / sweating</button>
+          <button class="tp" onclick="togP(this)">Cold / dry air</button>
+          <button class="tp" onclick="togP(this)">Laundry detergent</button>
+          <button class="tp" onclick="togP(this)">Fabric softener</button>
+          <button class="tp" onclick="togP(this)">New clothing</button>
+          <button class="tp" onclick="togP(this)">Wool / synthetic</button>
+          <button class="tp" onclick="togP(this)">Pool / chlorine</button>
+          <button class="tp" onclick="togP(this)">Stress / tired</button>
+          <button class="tp" onclick="togP(this)">Teething</button>
+        </div>
+      </div>
+      <div class="div"></div>
+      <label>Add custom trigger</label>
+      <div class="atr">
+        <input type="text" id="cti" placeholder="Custom trigger..." onkeydown="if(event.key==='Enter')addCT()">
+        <button class="bsm" onclick="addCT()">+ Add</button>
+      </div>
+      <div class="tg" id="ctg" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Bath & Skincare</div>
+      <div class="fg">
+        <label>Bath today?</label>
+        <div class="bt">
+          <button class="bb yes" onclick="selB(this,'bath','yes')">🛁 Yes</button>
+          <button class="bb no" onclick="selB(this,'bath','no')">✗ No</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Lotions / Creams (Enter to add)</label>
+        <div class="tiw" id="ltw" onclick="document.getElementById('lti').focus()">
+          <input class="tin" id="lti" placeholder="e.g. CeraVe, Aveeno Baby..." onkeydown="onTag(event,'lot')">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Medications Applied</div>
+      <div class="fg">
+        <label>Medication (Enter to add)</label>
+        <div class="tiw" id="mtw" onclick="document.getElementById('mti').focus()">
+          <input class="tin" id="mti" placeholder="e.g. Hydrocortisone 1%..." onkeydown="onTag(event,'med')">
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Times applied</label>
+        <select id="mtt"><option value="">—</option><option>1×</option><option>2×</option><option>3×</option><option>4×+</option></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="fg" style="margin-bottom:0">
+        <label>Notes / Observations</label>
+        <textarea id="ln" placeholder="Flare description, location details, baby's comfort, anything unusual..."></textarea>
+      </div>
+    </div>
+    <button class="btn" onclick="saveLog()">Save Today's Log</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══════ HISTORY ══════ -->
+<div class="sec" id="s-hist">
+  <div style="margin-top:14px">
+    <div id="ecc" class="card" style="display:none"><div class="ct">Skin Condition Trend</div><div class="cfw"><canvas id="ec"></canvas></div></div>
+    <div class="sl2">Past Entries</div>
+    <div id="hl"></div>
+    <div id="hn" class="empty"><div class="ei">📋</div><p>No logs yet. Start tracking in the Log tab.</p></div>
+  </div>
+</div>
+
+<!-- ══════ FOOD ══════ -->
+<div class="sec" id="s-food">
+  <div style="margin-top:14px">
+    <div class="card">
+      <div class="ct">Food × Flare Correlation</div>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px">Tracks when each food was last eaten and whether a flare (rating ≥ 3) occurred within the selected window.</p>
+      <label style="margin-bottom:6px">Flare window after eating</label>
+      <div class="fr" style="margin-bottom:0">
+        <button class="fb on" onclick="setCW(this,1)">Next day</button>
+        <button class="fb" onclick="setCW(this,2)">Within 2d</button>
+        <button class="fb" onclick="setCW(this,3)">Within 3d</button>
+      </div>
+    </div>
+    <div id="fcl"></div>
+    <div id="fne" class="empty"><div class="ei">🍽</div><p>Log at least a few days of foods and skin ratings to see correlations here.</p></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════ STATE ═══════
+let SD=[],AF='7d',RV=null,BS={},TS={food:[],lot:[],med:[]},SZ=[],CW=1;
+let CT=JSON.parse(localStorage.getItem('ct')||'[]');
+let EL=JSON.parse(localStorage.getItem('el')||'[]');
+let CH={}; // canvas chart handles
+
+// ═══════ INIT ═══════
+document.getElementById('ld').value=new Date().toISOString().split('T')[0];
+renderCT();
+const SA=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(!SA&&!localStorage.getItem('ib')) document.getElementById('ibanner').style.display='flex';
+
+// ═══════ NAV ═══════
+function go(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
+  document.querySelector(`[data-t="${t}"]`).classList.add('on');
+  document.getElementById('s-'+t).classList.add('on');
+  if(t==='hist') renderHist();
+  if(t==='food') renderFood();
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ═══════ SIMPLE CSV PARSER ═══════
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2) return [];
+  // Parse header, handle quoted fields
+  const parseLine=l=>{const r=[];let f='',inQ=false;for(let i=0;i<l.length;i++){const c=l[i];if(c==='"'){if(inQ&&l[i+1]==='"'){f+='"';i++;}else inQ=!inQ;}else if(c===','&&!inQ){r.push(f.trim());f='';}else f+=c;}r.push(f.trim());return r;};
+  const hdr=parseLine(lines[0]).map(h=>h.replace(/"/g,'').trim());
+  return lines.slice(1).map(l=>{const vals=parseLine(l);const obj={};hdr.forEach((h,i)=>obj[h]=vals[i]||'');return obj;});
+}
+
+// ═══════ SLEEP FILE ═══════
+function onDrop(e){e.preventDefault();document.getElementById('uz').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)procFile(f);}
+function onFile(e){const f=e.target.files[0];if(f)procFile(f);}
+
+function procFile(f){
+  const r=new FileReader();
+  r.onload=e=>{
+    const txt=e.target.result;
+    if(f.name.endsWith('.json')){try{SD=parseJ(JSON.parse(txt));drawSleep();}catch{toast('Could not parse JSON');}}
+    else{SD=parseC(parseCSV(txt));if(!SD.length)toast('No data found — check column names');else drawSleep();}
+  };
+  r.readAsText(f);
+}
+
+function parseC(rows){
+  if(!rows.length) return [];
+  const keys=Object.keys(rows[0]);
+  const sc=keys.find(k=>/start/i.test(k))||keys[0];
+  const ec=keys.find(k=>/end|finish|stop/i.test(k))||keys[1];
+  const tc=keys.find(k=>/type|category|kind|label/i.test(k));
+  return rows.flatMap(r=>{
+    const s=pd(r[sc]),e=pd(r[ec]);
+    if(!s||!e||e<=s) return [];
+    const d=(e-s)/3600000;if(d>20) return [];
+    return [{start:s,end:e,dur:d,type:(tc?r[tc]||'':'sleep').toLowerCase()}];
+  });
+}
+function parseJ(j){
+  const items=Array.isArray(j)?j:(j.data||j.entries||j.sessions||j.records||[]);
+  if(!Array.isArray(items)) return [];
+  return items.flatMap(x=>{
+    const s=pd(x.start_time||x.startTime||x.start||x.from);
+    const e=pd(x.end_time||x.endTime||x.end||x.to);
+    if(!s||!e||e<=s) return [];
+    const d=(e-s)/3600000;if(d>20) return [];
+    return [{start:s,end:e,dur:d,type:(x.type||x.category||x.kind||'sleep').toLowerCase()}];
+  });
+}
+function pd(v){if(!v) return null;const d=new Date(v);return isNaN(d)?null:d;}
+
+function setF(btn,f){
+  document.querySelectorAll('#s-sleep .fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');AF=f;drawSleep();
+}
+function filtSleep(){
+  if(AF==='all') return SD;
+  const days={'7d':7,'30d':30,'90d':90}[AF];
+  const cut=new Date();cut.setDate(cut.getDate()-days);
+  return SD.filter(s=>s.start>=cut);
+}
+function byDay(ss){
+  const m={};
+  for(const s of ss){
+    const k=s.start.toISOString().split('T')[0];
+    if(!m[k]) m[k]={tot:0,nap:0,night:0};
+    const isN=s.type.includes('nap');
+    m[k].tot+=s.dur;
+    if(isN)m[k].nap+=s.dur;else m[k].night+=s.dur;
+  }
+  return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0]));
+}
+
+// ═══════ MINI CHART ENGINE ═══════
+function mkChart(id,cfg){
+  if(CH[id]) CH[id]=null; // clear ref
+  const canvas=document.getElementById(id);
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.parentElement.clientWidth;
+  const H=canvas.parentElement.clientHeight;
+  canvas.width=W*devicePixelRatio;canvas.height=H*devicePixelRatio;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  CH[id]={ctx,W,H,cfg};
+  draw(id);
+}
+
+function draw(id){
+  const ch=CH[id];if(!ch)return;
+  const {ctx,W,H,cfg}=ch;
+  ctx.clearRect(0,0,W,H);
+  if(cfg.type==='bar') drawBar(ctx,W,H,cfg);
+  if(cfg.type==='line') drawLine(ctx,W,H,cfg);
+  if(cfg.type==='hbar') drawHBar(ctx,W,H,cfg);
+  if(cfg.type==='scatter') drawScatter(ctx,W,H,cfg);
+}
+
+const SAGE='rgba(122,158,135,0.75)';
+const SAGE2='rgba(168,196,176,0.85)';
+const SAGEL='rgba(77,122,93,0.85)';
+const WARM='#f0e8d8';
+const MUT='#8a9e92';
+const SLATE='#2c3e35';
+
+function drawBar(ctx,W,H,cfg){
+  const {labels,datasets,stacked}=cfg;
+  const pad={t:10,r:10,b:50,l:38};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const n=labels.length;
+  if(!n)return;
+  // compute max
+  let mx=0;
+  if(stacked){for(let i=0;i<n;i++){let s=0;datasets.forEach(d=>s+=d.data[i]||0);mx=Math.max(mx,s);}}
+  else{datasets.forEach(d=>d.data.forEach(v=>mx=Math.max(mx,v||0)));}
+  mx=mx||1;
+  const niceMax=Math.ceil(mx*1.1*2)/2;
+  // grid
+  ctx.strokeStyle=WARM;ctx.lineWidth=1;
+  const ticks=5;
+  for(let i=0;i<=ticks;i++){
+    const y=pad.t+ch-(ch*i/ticks);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    ctx.fillStyle=MUT;ctx.font=`${9*devicePixelRatio/devicePixelRatio}px DM Sans,sans-serif`;
+    ctx.textAlign='right';ctx.fillText((niceMax*i/ticks).toFixed(1),pad.l-4,y+3);
+  }
+  // bars
+  const gap=2;
+  const bw=cw/n - gap;
+  if(stacked){
+    for(let i=0;i<n;i++){
+      let yOff=0;
+      datasets.forEach((ds,di)=>{
+        const v=ds.data[i]||0;
+        const barH=ch*v/niceMax;
+        const x=pad.l+i*(cw/n)+gap/2;
+        const y=pad.t+ch-yOff-barH;
+        ctx.fillStyle=ds.color;
+        roundRect(ctx,x,y,bw,barH,3);ctx.fill();
+        yOff+=barH;
+      });
+    }
+  } else {
+    for(let i=0;i<n;i++){
+      const v=datasets[0].data[i]||0;
+      const barH=ch*v/niceMax;
+      const x=pad.l+i*(cw/n)+gap/2;
+      const y=pad.t+ch-barH;
+      ctx.fillStyle=datasets[0].color||SAGE;
+      roundRect(ctx,x,y,bw,barH,3);ctx.fill();
+    }
+  }
+  // x labels
+  ctx.fillStyle=MUT;ctx.font=`9px DM Sans,sans-serif`;ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(n/8));
+  for(let i=0;i<n;i+=step){
+    const x=pad.l+i*(cw/n)+bw/2+gap/2;
+    ctx.save();ctx.translate(x,H-pad.b+12);ctx.rotate(-0.6);ctx.fillText(labels[i],0,0);ctx.restore();
+  }
+  // legend
+  if(datasets.length>1){
+    let lx=pad.l;const ly=H-8;
+    datasets.forEach(ds=>{
+      ctx.fillStyle=ds.color;ctx.fillRect(lx,ly-7,10,7);
+      ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='left';
+      ctx.fillText(ds.label,lx+13,ly);lx+=ctx.measureText(ds.label).width+28;
+    });
+  }
+}
+
+function drawLine(ctx,W,H,cfg){
+  const {labels,data,colors,yMin=1,yMax=5,yLabels}=cfg;
+  const pad={t:10,r:10,b:50,l:60};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const n=labels.length;if(!n)return;
+  const range=yMax-yMin||1;
+  // grid
+  ctx.strokeStyle=WARM;ctx.lineWidth=1;
+  const steps=yMax-yMin;
+  for(let i=0;i<=steps;i++){
+    const y=pad.t+ch-(ch*i/steps);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='right';
+    const label=yLabels?yLabels[i+yMin]||'':((yMin+i).toFixed(0));
+    ctx.fillText(label,pad.l-4,y+3);
+  }
+  // line fill
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad.l+cw*i/(n-1||1);
+    const y=pad.t+ch-ch*(v-yMin)/range;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#7a9e87';ctx.lineWidth=2;ctx.stroke();
+  ctx.lineTo(pad.l+cw,pad.t+ch);ctx.lineTo(pad.l,pad.t+ch);ctx.closePath();
+  ctx.fillStyle='rgba(122,158,135,0.1)';ctx.fill();
+  // dots
+  data.forEach((v,i)=>{
+    const x=pad.l+cw*i/(n-1||1);
+    const y=pad.t+ch-ch*(v-yMin)/range;
+    ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle=colors?colors[i]:'#7a9e87';ctx.fill();
+  });
+  // x labels
+  ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(n/7));
+  for(let i=0;i<n;i+=step){
+    const x=pad.l+cw*i/(n-1||1);
+    ctx.save();ctx.translate(x,H-pad.b+12);ctx.rotate(-0.5);ctx.fillText(labels[i],0,0);ctx.restore();
+  }
+}
+
+function drawHBar(ctx,W,H,cfg){
+  const {labels,data,colors}=cfg;
+  const pad={t:10,r:50,b:10,l:80};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const n=labels.length;if(!n)return;
+  const mx=100;
+  const gap=4;
+  const bh=(ch-gap*(n-1))/n;
+  // grid lines
+  for(let i=0;i<=4;i++){
+    const x=pad.l+cw*i/4;
+    ctx.strokeStyle=WARM;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+ch);ctx.stroke();
+    ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText((i*25)+'%',x,H-2);
+  }
+  for(let i=0;i<n;i++){
+    const y=pad.t+i*(bh+gap);
+    const bw=cw*data[i]/mx;
+    ctx.fillStyle=colors[i];
+    roundRect(ctx,pad.l,y,bw,bh,3);ctx.fill();
+    ctx.fillStyle=SLATE;ctx.font='10px DM Sans,sans-serif';ctx.textAlign='right';
+    ctx.fillText(labels[i],pad.l-4,y+bh/2+4);
+    ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(data[i]+'%',pad.l+bw+4,y+bh/2+4);
+  }
+}
+
+function drawScatter(ctx,W,H,cfg){
+  const {sessions}=cfg;
+  const pad={t:10,r:10,b:50,l:42};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  if(!sessions.length)return;
+  const dates=[...new Set(sessions.map(s=>s.start.toISOString().split('T')[0]))].sort();
+  const n=dates.length||1;
+  // grid
+  ctx.strokeStyle=WARM;ctx.lineWidth=1;
+  for(let h=0;h<=24;h+=4){
+    const y=pad.t+ch-ch*h/24;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='right';
+    const ap=h<12?'am':h===12?'pm':'pm';
+    const hh=h%12||12;
+    ctx.fillText(h===0?'12am':h===12?'12pm':`${hh}${ap}`,pad.l-3,y+3);
+  }
+  sessions.forEach(s=>{
+    const di=dates.indexOf(s.start.toISOString().split('T')[0]);
+    const x=pad.l+cw*di/(n-1||1);
+    const yv=s.start.getHours()+s.start.getMinutes()/60;
+    const y=pad.t+ch-ch*yv/24;
+    const r=Math.max(4,s.dur*2.5);
+    const isNap=s.type.includes('nap');
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=isNap?'rgba(168,196,176,0.65)':'rgba(77,122,93,0.55)';ctx.fill();
+    ctx.strokeStyle=isNap?'rgba(122,158,135,0.8)':'rgba(77,122,93,0.9)';ctx.lineWidth=1;ctx.stroke();
+  });
+  // x labels
+  ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(n/8));
+  for(let i=0;i<n;i+=step){
+    const x=pad.l+cw*i/(n-1||1);
+    const dt=new Date(dates[i]+'T12:00:00');
+    const lbl=dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    ctx.save();ctx.translate(x,H-pad.b+12);ctx.rotate(-0.55);ctx.fillText(lbl,0,0);ctx.restore();
+  }
+  // legend
+  [{c:'rgba(168,196,176,0.8)',l:'Nap'},{c:'rgba(77,122,93,0.7)',l:'Night'}].forEach((x,i)=>{
+    ctx.beginPath();ctx.arc(pad.l+i*60,H-8,5,0,Math.PI*2);ctx.fillStyle=x.c;ctx.fill();
+    ctx.fillStyle=MUT;ctx.font='9px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText(x.l,pad.l+i*60+8,H-4);
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  if(h<=0)return;r=Math.min(r,h/2,w/2);
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+
+function drawSleep(){
+  document.getElementById('sn').style.display='none';
+  document.getElementById('ss').style.display='block';
+  const fil=filtSleep();
+  const days=byDay(fil);
+  const labels=days.map(([d])=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  const tots=days.map(([,v])=>+v.tot.toFixed(2));
+  const naps=days.map(([,v])=>+v.nap.toFixed(2));
+  const nights=days.map(([,v])=>+v.night.toFixed(2));
+  const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1):'—';
+  document.getElementById('sr').innerHTML=`
+    <div class="sc"><div class="sv">${avg(tots)}h</div><div class="sl">Avg Total</div></div>
+    <div class="sc"><div class="sv">${avg(naps)}h</div><div class="sl">Avg Nap</div></div>
+    <div class="sc"><div class="sv">${avg(nights)}h</div><div class="sl">Avg Night</div></div>`;
+  setTimeout(()=>{
+    mkChart('c1',{type:'bar',labels,datasets:[{data:tots,color:SAGE}]});
+    mkChart('c2',{type:'bar',labels,stacked:true,datasets:[{label:'Nap',data:naps,color:SAGE2},{label:'Night',data:nights,color:SAGEL}]});
+    mkChart('c3',{type:'scatter',sessions:fil});
+  },50);
+  toast(`Loaded ${SD.length} sessions ✓`);
+}
+
+// ═══════ ECZEMA FORM ═══════
+function selR(btn){
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');RV=parseInt(btn.dataset.v);
+  document.getElementById('fc').style.display=RV>=2?'block':'none';
+}
+
+const svgMap={'Left cheek':'z-lc','Right cheek':'z-rc','Forehead':'z-fh','Neck':'z-nk','Chest':'z-ch','Back':'z-bk','Left elbow':'z-le','Right elbow':'z-re','Left wrist':'z-lw','Right wrist':'z-rw','Left knee':'z-lk','Right knee':'z-rk','Left ankle':'z-la','Right ankle':'z-ra'};
+function tz(zone){
+  const idx=SZ.indexOf(zone);
+  idx===-1?SZ.push(zone):SZ.splice(idx,1);
+  const sel=SZ.includes(zone);
+  document.querySelectorAll(`.zb[data-z="${zone}"]`).forEach(b=>b.classList.toggle('on',sel));
+  const sid=svgMap[zone];if(sid){const el=document.getElementById(sid);if(el)el.classList.toggle('on',sel);}
+}
+function togP(btn){btn.classList.toggle('on');}
+function togColl(h){
+  const v=h.querySelector('.chv'),b=h.nextElementSibling;
+  v.classList.toggle('on');b.classList.toggle('on');
+}
+function selB(btn,k,v){btn.parentElement.querySelectorAll('.bb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');BS[k]=v;}
+
+function onTag(e,g){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();const v=e.target.value.replace(/,/g,'').trim();
+    if(v){TS[g].push(v);renderTags(g);}e.target.value='';
+  }else if(e.key==='Backspace'&&!e.target.value&&TS[g].length){TS[g].pop();renderTags(g);}
+}
+const twId={food:'ftw',lot:'ltw',med:'mtw'};
+const tiId={food:'fti',lot:'lti',med:'mti'};
+function renderTags(g){
+  const wrap=document.getElementById(twId[g]),inp=document.getElementById(tiId[g]);
+  wrap.querySelectorAll('.tc').forEach(c=>c.remove());
+  TS[g].forEach((t,i)=>{
+    const c=document.createElement('div');c.className='tc';
+    c.innerHTML=`${esc(t)}<span class="x" onclick="TS['${g}'].splice(${i},1);renderTags('${g}')">×</span>`;
+    wrap.insertBefore(c,inp);
+  });
+}
+function addCT(){
+  const inp=document.getElementById('cti'),v=inp.value.trim();if(!v)return;
+  if(!CT.includes(v)){CT.push(v);localStorage.setItem('ct',JSON.stringify(CT));}
+  inp.value='';renderCT();
+}
+function renderCT(){
+  document.getElementById('ctg').innerHTML=CT.map(t=>`<button class="tp" onclick="togP(this)">${esc(t)}</button>`).join('');
+}
+function saveLog(){
+  const date=document.getElementById('ld').value;
+  if(!date){toast('Please select a date');return;}
+  if(!RV){toast('Please rate skin condition');return;}
+  const trigs=[...document.querySelectorAll('#ftg .tp.on, #etg .tp.on, #ctg .tp.on')].map(b=>b.textContent);
+  const log={id:Date.now(),date,skinRating:RV,flareZones:[...SZ],foods:[...TS.food],triggers:trigs,bath:BS.bath||null,lotions:[...TS.lot],medications:[...TS.med],medTimes:document.getElementById('mtt').value,notes:document.getElementById('ln').value.trim()};
+  EL=EL.filter(l=>l.date!==date);EL.unshift(log);localStorage.setItem('el',JSON.stringify(EL));
+  resetForm();toast('Log saved ✓');go('hist');
+}
+function resetForm(){
+  document.getElementById('ld').value=new Date().toISOString().split('T')[0];
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));RV=null;SZ=[];
+  document.querySelectorAll('.zb,.bzone').forEach(b=>{b.classList.remove('on');});
+  document.getElementById('fc').style.display='none';
+  TS={food:[],lot:[],med:[]};['food','lot','med'].forEach(renderTags);
+  document.querySelectorAll('.tp,.bb').forEach(b=>b.classList.remove('on'));
+  BS={};document.getElementById('mtt').value='';document.getElementById('ln').value='';
+}
+
+// ═══════ HISTORY ═══════
+const RE=['','😊','🙂','😐','😟','😣'];
+const RL=['','Clear','Mild','Moderate','Severe','Worst'];
+const RC=['','#7a9e87','#a8c4b0','#e8c87a','#e8a598','#c97b6e'];
+function renderHist(){
+  const list=document.getElementById('hl'),empty=document.getElementById('hn'),cc=document.getElementById('ecc');
+  if(!EL.length){list.innerHTML='';empty.style.display='block';cc.style.display='none';return;}
+  empty.style.display='none';cc.style.display='block';
+  const sorted=[...EL].sort((a,b)=>a.date.localeCompare(b.date));
+  setTimeout(()=>{
+    mkChart('ec',{type:'line',labels:sorted.map(l=>new Date(l.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})),
+      data:sorted.map(l=>l.skinRating),colors:sorted.map(l=>RC[l.skinRating]),yMin:1,yMax:5,
+      yLabels:{1:'Clear',2:'Mild',3:'Mod.',4:'Severe',5:'Worst'}});
+  },50);
+  list.innerHTML=EL.map(log=>{
+    const tags=[];
+    log.flareZones?.forEach(z=>tags.push(`<span class="zo">📍 ${esc(z)}</span>`));
+    log.triggers?.forEach(t=>tags.push(`<span class="tr">⚡ ${esc(t)}</span>`));
+    log.medications?.forEach(m=>tags.push(`<span class="md">💊 ${esc(m)}</span>`));
+    log.lotions?.forEach(l=>tags.push(`<span>${esc(l)}</span>`));
+    if(log.bath==='yes')tags.push(`<span>🛁 Bath</span>`);
+    const pct=((log.skinRating-1)/4*100).toFixed(0);
+    const ds=new Date(log.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric'});
+    return `<div class="he">
+      <button class="dx" onclick="delLog(${log.id})">×</button>
+      <div class="hd">${ds}</div>
+      <span style="font-size:20px;margin-right:6px">${RE[log.skinRating]}</span><strong>${RL[log.skinRating]}</strong>
+      <div class="sbar"><div class="sbar-f" style="width:${pct}%;background:${RC[log.skinRating]}"></div></div>
+      <div class="ht">${tags.join('')}</div>
+      ${log.foods?.length?`<div style="font-size:11.5px;color:var(--muted);margin-top:5px">🍽 ${log.foods.map(esc).join(', ')}</div>`:''}
+      ${log.notes?`<div class="hn">"${esc(log.notes)}"</div>`:''}
+      ${log.medTimes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Medication: ${log.medTimes}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function delLog(id){EL=EL.filter(l=>l.id!==id);localStorage.setItem('el',JSON.stringify(EL));renderHist();renderFood();}
+
+// ═══════ FOOD CORRELATION ═══════
+function setCW(btn,d){
+  document.querySelectorAll('#s-food .fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');CW=d;renderFood();
+}
+function renderFood(){
+  const sorted=[...EL].sort((a,b)=>a.date.localeCompare(b.date));
+  const ne=document.getElementById('fne'),fl=document.getElementById('fcl');
+  if(!sorted.length){ne.style.display='block';fl.innerHTML='';return;}
+  const fm={};
+  for(let i=0;i<sorted.length;i++){
+    const log=sorted[i];
+    for(const food of(log.foods||[])){
+      const key=food.toLowerCase().trim();
+      if(!fm[key]) fm[key]={name:food,lastEaten:log.date,count:0,fc:0};
+      fm[key].name=food;fm[key].lastEaten=log.date;fm[key].count++;
+      let flared=false;
+      for(let j=i+1;j<sorted.length;j++){
+        const diff=(new Date(sorted[j].date)-new Date(log.date))/86400000;
+        if(diff<0.5) continue;if(diff>CW+0.5) break;
+        if(sorted[j].skinRating>=3){flared=true;break;}
+      }
+      if(flared) fm[key].fc++;
+    }
+  }
+  const foods=Object.values(fm);
+  if(!foods.length){ne.style.display='block';fl.innerHTML='';return;}
+  ne.style.display='none';
+  foods.sort((a,b)=>{const ar=a.count>1?a.fc/a.count:-1,br=b.count>1?b.fc/b.count:-1;return br-ar;});
+  const dAgo=d=>{const diff=Math.round((Date.now()-new Date(d+'T12:00:00'))/86400000);return diff===0?'today':diff===1?'yesterday':`${diff}d ago`;};
+  const eligible=foods.filter(f=>f.count>=2);
+  fl.innerHTML=`<div class="card"><div class="ct">All Tracked Foods</div>
+    ${foods.map(f=>{
+      const rate=f.count>1?f.fc/f.count:null;
+      const pct=rate!==null?Math.round(rate*100):null;
+      let badge,bc;
+      if(pct===null){badge='1 log';bc='n';}
+      else if(pct>=60){badge=`⚠ ${pct}% flare rate`;bc='w';}
+      else if(pct>=30){badge=`${pct}% flare rate`;bc='w';}
+      else{badge=`${pct}% flare rate`;bc='ok';}
+      return `<div class="cfr"><div><div class="cfn">${esc(f.name)}</div><div class="cfm">Last: ${dAgo(f.lastEaten)} · logged ${f.count}×</div></div><span class="cbg ${bc}">${badge}</span></div>`;
+    }).join('')}
+  </div>${eligible.length>=2?buildFC(eligible):''}`;
+}
+function buildFC(foods){
+  const top=foods.slice(0,12);
+  const h=Math.max(140,top.length*26);
+  setTimeout(()=>{
+    mkChart('fcc',{type:'hbar',
+      labels:top.map(f=>f.name.length>12?f.name.slice(0,12)+'…':f.name),
+      data:top.map(f=>Math.round(f.fc/f.count*100)),
+      colors:top.map(f=>{const r=f.fc/f.count;return r>=0.6?'rgba(201,123,110,0.85)':r>=0.3?'rgba(232,200,122,0.85)':'rgba(122,158,135,0.75)';})
+    });
+  },60);
+  return `<div class="card"><div class="ct">Flare Rate by Food</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:8px">🔴 High · 🟡 Moderate · 🟢 Low &nbsp;(2+ logs only)</p>
+    <div style="position:relative;height:${h}px"><canvas id="fcc"></canvas></div></div>`;
+}
+</script>
+</body>
+</html>
